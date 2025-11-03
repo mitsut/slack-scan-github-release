@@ -39,11 +39,13 @@ ENV/
 # Environment variables
 .env
 .env.local
+.secret
 
 # Output files
 *.csv
 *.md
 !README.md
+*.html
 
 # Logs
 *.log

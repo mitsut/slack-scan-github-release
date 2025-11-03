@@ -8,7 +8,7 @@ SlackチャンネルからGitHubのリリース通知を抽出するスクリプ
 - Attachment の Fallback に "New release" を含むGitHubリリース通知を抽出
 - リポジトリ名、バージョン、リリース日時、URLを一覧表示
 - GitHubリリースノートの自動取得（オプション）
-- CSV/Markdown出力オプション付き
+- CSV/Markdown/HTML出力オプション付き
 
 ## 前提条件
 
@@ -64,6 +64,19 @@ uv sync
 
 ### 3. 環境変数の設定
 
+#### 方法1: .secretファイルを使用（推奨）
+
+```bash
+# .secret.exampleをコピーして.secretを作成
+cp .secret.example .secret
+
+# .secretファイルを編集してトークンなどを設定
+# 設定後、以下のコマンドで環境変数を読み込む
+source .secret
+```
+
+#### 方法2: 直接export
+
 ```bash
 export SLACK_BOT_TOKEN='xoxb-your-token-here'
 ```
@@ -73,7 +86,8 @@ export SLACK_BOT_TOKEN='xoxb-your-token-here'
 ### 基本的な使い方
 
 ```bash
-# uvで実行
+# .secretファイルで環境変数を設定している場合
+source .secret
 uv run python slack_github_releases.py
 
 # または、インストール済みのコマンドとして実行
@@ -107,6 +121,9 @@ export OUTPUT_CSV='releases.csv'
 # Markdown出力(日付別グループ化、リリースノート付き)
 export OUTPUT_MD='releases.md'
 
+# HTML出力(箱庭WG向けフォーマット、リリースノート付き)
+export OUTPUT_HTML='hakoniwa.html'
+
 # 実行
 uv run python slack_github_releases.py
 ```
@@ -122,6 +139,9 @@ SLACK_BOT_TOKEN='xoxb-your-token' FETCH_NOTES=true OUTPUT_CSV='releases.csv' uv 
 
 # Markdown形式でリリースノート付き出力
 SLACK_BOT_TOKEN='xoxb-your-token' FETCH_NOTES=true OUTPUT_MD='releases.md' uv run slack-scan
+
+# HTML形式でリリースノート付き出力（箱庭WG向け）
+SLACK_BOT_TOKEN='xoxb-your-token' FETCH_NOTES=true OUTPUT_HTML='hakoniwa.html' uv run slack-scan
 
 # 半年分のデータをリリースノート付きで取得
 SCAN_DAYS=180 FETCH_NOTES=true uv run python slack_github_releases.py
@@ -168,6 +188,29 @@ GitHubリリース一覧 (合計: 12件)
 ```
 
 **注意**: Markdown出力にはリリースノートが必要なため、`FETCH_NOTES=true`との併用が推奨されます。
+
+### HTML出力例
+
+`OUTPUT_HTML`オプションを使用すると、箱庭WG向けのHTML形式（定義リスト）でリリース情報を出力できます:
+
+```html
+    <dt>2025-03-11</dt>
+    <dd>
+        【一般向け】<a href="https://toppers.github.io/hakoniwa/">箱庭WG</a>で以下のリポジトリのリリースを行いました。<br>
+        <ul>
+            <li><a href="https://github.com/toppers/hakoniwa-drone-core/releases/tag/v2.0.0">hakoniwa-drone-core v2.0.0</a>(2025.3.7)</li>
+            <ul>
+                <li>PX4 連携のサンプルアプリ公開(xxx-aircraft_service_px4)</li>
+                <li>Ardupilot 連携のサンプルアプリ公開(xxx-aircraft_service_ardupilot)</li>
+                <li>箱庭ドローンのサンプルアプリ公開(xxx-drone_servce_rc)</li>
+            </ul>
+            <li><a href="https://github.com/toppers/hakoniwa-drone-core/releases/tag/v1.0.0">hakoniwa-drone-core v1.0.0</a>(2025.2.3)</li>
+
+        </ul>
+    </dd>
+```
+
+**注意**: HTML出力にはリリースノートが必要なため、`FETCH_NOTES=true`との併用が推奨されます。
 
 ## トラブルシューティング
 

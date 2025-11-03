@@ -378,6 +378,81 @@ def export_to_markdown(releases: List[Dict], output_file: str):
     print(f"\nMarkdownファイルを出力しました: {output_file}")
 
 
+def export_to_html(releases: List[Dict], output_file: str):
+    """
+    リリース情報をHTML形式で出力（箱庭WG向けフォーマット）
+
+    Args:
+        releases: リリース情報のリスト
+        output_file: 出力ファイルパス
+    """
+    from collections import defaultdict
+
+    # 日付ごとにグループ化
+    releases_by_date = defaultdict(list)
+    for release in releases:
+        date_str = release['release_date'].strftime('%Y-%m-%d')  # 2025-03-11形式
+        releases_by_date[date_str].append(release)
+
+    # HTML生成
+    lines = []
+
+    # 日付順にソート（新しい順）
+    sorted_dates = sorted(releases_by_date.keys(), reverse=True)
+
+    for date_str in sorted_dates:
+        lines.append(f'    <dt>{date_str}</dt>')
+        lines.append('    <dd>')
+        lines.append('        【一般向け】<a href="https://toppers.github.io/hakoniwa/">箱庭WG</a>で以下のリポジトリのリリースを行いました。<br>')
+        lines.append('        <ul>')
+
+        for release in releases_by_date[date_str]:
+            repo = release['repository']
+            version = release['version']
+            url = release['url']
+            release_date = release['release_date'].strftime('%Y.%-m.%-d')
+
+            # リリースタイトル行
+            if url:
+                lines.append(f'            <li><a href="{url}">{repo} {version}</a>({release_date})</li>')
+            else:
+                lines.append(f'            <li>{repo} {version}({release_date})</li>')
+
+            # リリースノート
+            if release.get('notes'):
+                notes = release['notes'].strip()
+                if notes:
+                    lines.append('            <ul>')
+                    # リリースノートを行ごとに処理
+                    note_lines = notes.split('\n')
+                    for note_line in note_lines:
+                        note_line = note_line.strip()
+                        if note_line:
+                            # マークダウンのリスト記号を除去
+                            if note_line.startswith('#'):
+                                # 見出しは無視
+                                continue
+                            elif note_line.startswith('-') or note_line.startswith('*'):
+                                # リスト記号を除去
+                                note_line = note_line.lstrip('-*').strip()
+                                lines.append(f'                <li>{note_line}</li>')
+                            else:
+                                # 通常のテキスト
+                                lines.append(f'                <li>{note_line}</li>')
+                    lines.append('            </ul>')
+
+        lines.append('            ')
+        lines.append('        </ul>')
+        lines.append('    </dd>')
+
+    # ファイルに書き込み
+    with open(output_file, 'w', encoding='utf-8') as f:
+        f.write('\n'.join(lines))
+        f.write('\n')
+
+    print(f"\nHTMLファイルを出力しました: {output_file}")
+
+
 def main():
     # 環境変数からSlackトークンを取得
     slack_token = os.environ.get("SLACK_BOT_TOKEN")
@@ -474,6 +549,11 @@ def main():
         if os.environ.get("OUTPUT_MD"):
             output_file = os.environ.get("OUTPUT_MD")
             export_to_markdown(releases, output_file)
+
+        # HTML出力オプション
+        if os.environ.get("OUTPUT_HTML"):
+            output_file = os.environ.get("OUTPUT_HTML")
+            export_to_html(releases, output_file)
 
     except Exception as e:
         print(f"エラー: {e}")
