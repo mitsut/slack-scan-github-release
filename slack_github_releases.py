@@ -331,8 +331,8 @@ def export_to_markdown(releases: List[Dict], output_file: str):
     # Markdown生成
     lines = []
 
-    # 日付順にソート（新しい順）
-    sorted_dates = sorted(releases_by_date.keys(), reverse=True)
+    # 日付順にソート（新しい順）- 文字列でなく数値で比較
+    sorted_dates = sorted(releases_by_date.keys(), key=lambda d: [int(x) for x in d.split('.')], reverse=True)
 
     for date_str in sorted_dates:
         lines.append(f"- {date_str}")
@@ -397,8 +397,8 @@ def export_to_html(releases: List[Dict], output_file: str):
     # HTML生成
     lines = []
 
-    # 日付順にソート（新しい順）
-    sorted_dates = sorted(releases_by_date.keys(), reverse=True)
+    # 日付順にソート（新しい順）- 文字列でなく数値で比較
+    sorted_dates = sorted(releases_by_date.keys(), key=lambda d: [int(x) for x in d.split('-')], reverse=True)
 
     for date_str in sorted_dates:
         lines.append(f'    <dt>{date_str}</dt>')
