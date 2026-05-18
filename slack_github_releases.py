@@ -312,6 +312,25 @@ def print_releases(releases: List[Dict]):
         print()
 
 
+def _merge_label_url_pairs(note_lines: List[str]) -> List[str]:
+    """「ラベル：」行 + URL行のペアを [ラベル](url) 形式に変換"""
+    url_re = re.compile(r'^https?://\S+$')
+    result = []
+    i = 0
+    while i < len(note_lines):
+        line = note_lines[i]
+        if (line.endswith(':') or line.endswith('：')) and i + 1 < len(note_lines):
+            next_line = note_lines[i + 1]
+            if url_re.match(next_line):
+                label = line.rstrip(':：').strip()
+                result.append(f'[{label}]({next_line})')
+                i += 2
+                continue
+        result.append(line)
+        i += 1
+    return result
+
+
 def export_to_markdown(releases: List[Dict], output_file: str):
     """
     リリース情報をMarkdown形式で出力
@@ -354,21 +373,15 @@ def export_to_markdown(releases: List[Dict], output_file: str):
             if release.get('notes'):
                 notes = release['notes'].strip()
                 if notes:
-                    # リリースノートを行ごとに処理
-                    note_lines = notes.split('\n')
+                    note_lines = [l.strip() for l in notes.split('\n') if l.strip()]
+                    note_lines = _merge_label_url_pairs(note_lines)
                     for note_line in note_lines:
-                        note_line = note_line.strip()
-                        if note_line:
-                            # マークダウンのリスト記号を処理
-                            if note_line.startswith('#'):
-                                # 見出しは無視または変換
-                                continue
-                            elif note_line.startswith('-') or note_line.startswith('*'):
-                                # 既にリスト形式の場合
-                                lines.append(f"      {note_line}")
-                            else:
-                                # 通常のテキストはリスト形式に
-                                lines.append(f"      - {note_line}")
+                        if note_line.startswith('#'):
+                            continue
+                        elif note_line.startswith('-') or note_line.startswith('*'):
+                            lines.append(f"      {note_line}")
+                        else:
+                            lines.append(f"      - {note_line}")
 
     # ファイルに書き込み
     with open(output_file, 'w', encoding='utf-8') as f:
@@ -423,25 +436,22 @@ def export_to_html(releases: List[Dict], output_file: str):
                 notes = release['notes'].strip()
                 if notes:
                     lines.append('            <ul>')
-                    # リリースノートを行ごとに処理
-                    note_lines = notes.split('\n')
+                    note_lines = [l.strip() for l in notes.split('\n') if l.strip()]
+                    note_lines = _merge_label_url_pairs(note_lines)
+                    md_link_re = re.compile(r'^\[(.+?)\]\((.+?)\)$')
                     for note_line in note_lines:
-                        note_line = note_line.strip()
-                        if note_line:
-                            # マークダウンのリスト記号を除去
-                            if note_line.startswith('#'):
-                                # 見出しは無視
-                                continue
-                            elif note_line.startswith('-') or note_line.startswith('*'):
-                                # リスト記号を除去
-                                note_line = note_line.lstrip('-*').strip()
-                                lines.append(f'                <li>{note_line}</li>')
-                            else:
-                                # 通常のテキスト
-                                lines.append(f'                <li>{note_line}</li>')
+                        if note_line.startswith('#'):
+                            continue
+                        if note_line.startswith('-') or note_line.startswith('*'):
+                            note_line = note_line.lstrip('-*').strip()
+                        md_match = md_link_re.match(note_line)
+                        if md_match:
+                            text, href = md_match.groups()
+                            lines.append(f'                <li><a href="{href}">{text}</a></li>')
+                        else:
+                            lines.append(f'                <li>{note_line}</li>')
                     lines.append('            </ul>')
 
-        lines.append('            ')
         lines.append('        </ul>')
         lines.append('    </dd>')
 
