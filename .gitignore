@@ -45,6 +45,8 @@ ENV/
 *.csv
 *.md
 !README.md
+!CLAUDE.md
+!.claude/skills/**/*.md
 *.html
 
 # Logs
