@@ -36,9 +36,23 @@ description: 箱庭WGの情報発信ワークフロー。Slack からのリリ�
 ## 作業対象
 
 - スキャンスクリプト: このリポジトリ（`slack-scan-github-relase`）
-- サイト: `toppers/hakoniwa`、ローカルクローンは `/Users/mtakada/Workspace/hakoniwa/hakoniwa`
+- サイト: `toppers/hakoniwa`
   - 公開ブランチは `main` ではなく **`web`**。PR の base は必ず `web`。
 - Discussions: `https://github.com/orgs/toppers/discussions` の実体は **`toppers/users-forum`** リポジトリ
+
+### サイトのローカルクローンの場所
+
+以降のコマンドは `$HAKONIWA` にサイトのクローンパスが入っている前提で書いてある。
+マシンによって置き場所が違う（Mac Studio では `~/Workspace/hakoniwa/hakoniwa`）ので、
+決め打ちせず最初に解決する。
+
+```bash
+HAKONIWA=$(find ~/Workspace -maxdepth 4 -type d -name hakoniwa -exec test -d {}/.git \; -print 2>/dev/null | head -1)
+git -C "$HAKONIWA" remote -v   # toppers/hakoniwa を指しているか確認
+```
+
+見つからない、または別のリポジトリを指している場合は、クローン先をユーザに確認する。
+勝手に `git clone` しない（置き場所の好みがあるため）。
 
 ## Step 1: Slack をスキャンする
 
@@ -46,7 +60,7 @@ description: 箱庭WGの情報発信ワークフロー。Slack からのリリ�
 ユーザの記憶に頼らず実際のファイルから取る。
 
 ```bash
-cd /Users/mtakada/Workspace/hakoniwa/hakoniwa && git fetch -q origin && git show origin/web:content/_index.md | grep -m1 "^- 20"
+git -C "$HAKONIWA" fetch -q origin && git -C "$HAKONIWA" show origin/web:content/_index.md | grep -m1 "^- 20"
 ```
 
 その日付から今日までの日数を計算し、少し余裕を持たせた日数を `SCAN_DAYS` に渡す。
@@ -85,7 +99,7 @@ SCAN_DAYS=<日数> FETCH_NOTES=true OUTPUT_MD=releases.md OUTPUT_CSV=releases.cs
 残っていたり、`web` が古いままだと、そこから枝を切ってしまい差分が濁る。
 
 ```bash
-cd /Users/mtakada/Workspace/hakoniwa/hakoniwa
+cd "$HAKONIWA"
 git checkout web && git pull --ff-only && git fetch --prune origin
 git branch -vv   # [origin/xxx: gone] が残っていれば git branch -d で消す
 git checkout -b update-YYYYMM origin/web
@@ -127,7 +141,7 @@ git checkout -b update-YYYYMM origin/web
 イベント告知は更新情報とは別のセクション・別のブランチで扱う。
 
 ```bash
-cd /Users/mtakada/Workspace/hakoniwa/hakoniwa
+cd "$HAKONIWA"
 git checkout web && git pull --ff-only && git fetch --prune origin
 git checkout -b topics-YYYYMM origin/web
 ```
@@ -304,7 +318,7 @@ TOPPERS のウェブ管理担当へ連絡する場合の文面案を作る。送
 ローカルにはブランチが残り、`web` も遅れたままになるので、マージを確認したら戻しておく。
 
 ```bash
-cd /Users/mtakada/Workspace/hakoniwa/hakoniwa
+cd "$HAKONIWA"
 git checkout web && git pull --ff-only && git fetch --prune origin
 git branch -vv                 # [origin/xxx: gone] が消し忘れ
 git branch -d <作業ブランチ>    # マージ済みなら -d で消せる

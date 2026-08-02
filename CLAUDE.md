@@ -1,7 +1,8 @@
 # CLAUDE.md
 
 このリポジトリは Slack チャンネルから GitHub リリース通知を抽出する
-Python スクリプトです。Cowork から実行する際は以下に従ってください。
+Python スクリプトです。このリポジトリで作業する際は以下に従ってください。
+セットアップ手順・全オプション・トラブルシューティングは README.md にあります。
 
 ## 機密情報の取り扱い
 
@@ -17,18 +18,18 @@ Python スクリプトです。Cowork から実行する際は以下に従って
 
 スクリプトを実行する際は、必ず以下の順序で行います:
 
-\`\`\`bash
+```bash
 source .secret
 uv sync
 uv run python slack_github_releases.py
-\`\`\`
+```
 
-出力オプション（環境変数で指定）:
-- `OUTPUT_HTML=hakoniwa.html` — 箱庭WG向け HTML 形式
-- `OUTPUT_MD=releases.md` — Markdown 形式
-- `OUTPUT_CSV=releases.csv` — CSV 形式
-- `FETCH_NOTES=true` — リリースノート取得（Markdown/HTML 出力時は推奨）
-- `SCAN_DAYS=14` — スキャン期間（デフォルト 7 日）
+オプションはすべて環境変数で指定します。出力先は `OUTPUT_MD` / `OUTPUT_CSV` /
+`OUTPUT_HTML`（箱庭WG向け）で、指定しなければ標準出力のみです。一覧と例は README.md を
+参照してください。次の 2 つは付け忘れると出力が痩せるので、意識して指定します。
+
+- `FETCH_NOTES=true` — リリースノートを取得。Markdown/HTML 出力ではほぼ必須
+- `SCAN_DAYS=14` — スキャン期間（デフォルト 7 日）。前回掲載日からの日数を指定する
 
 ## 運用方針
 
