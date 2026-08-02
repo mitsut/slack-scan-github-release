@@ -26,6 +26,7 @@ description: 箱庭WGの情報発信ワークフロー。Slack からのリリ�
 | 4 | レビュー対応 | 追加コミット |
 | 5 | Discussions 告知 | users-forum の Discussion |
 | 6 | ウェブ管理宛メール文面 | 文面案（送信はユーザが行う） |
+| 7 | 後片付け | `web` に戻してローカルを同期 |
 
 **Step 5・6 は PR がマージされてから着手する。** PR にはレビューで変更が入る前提なので、
 マージ前に作った告知文やメール文面は、掲載内容とずれたまま外に出るリスクがある。
@@ -80,9 +81,14 @@ SCAN_DAYS=<日数> FETCH_NOTES=true OUTPUT_MD=releases.md OUTPUT_CSV=releases.cs
 
 ## Step 2: サイトの更新情報を編集する
 
+作業ブランチを切る前に、ローカルを `web` の最新に揃える。前回の作業ブランチが
+残っていたり、`web` が古いままだと、そこから枝を切ってしまい差分が濁る。
+
 ```bash
 cd /Users/mtakada/Workspace/hakoniwa/hakoniwa
-git fetch -q origin && git checkout -b update-YYYYMM origin/web
+git checkout web && git pull --ff-only && git fetch --prune origin
+git branch -vv   # [origin/xxx: gone] が残っていれば git branch -d で消す
+git checkout -b update-YYYYMM origin/web
 ```
 
 ブランチ名は `update-<年月>`（例: `update-202607`）。過去の PR がこの規則で並んでいる。
@@ -122,7 +128,8 @@ git fetch -q origin && git checkout -b update-YYYYMM origin/web
 
 ```bash
 cd /Users/mtakada/Workspace/hakoniwa/hakoniwa
-git fetch -q origin && git checkout -b topics-YYYYMM origin/web
+git checkout web && git pull --ff-only && git fetch --prune origin
+git checkout -b topics-YYYYMM origin/web
 ```
 
 編集対象は `content/_index.md` の `### トピックス・イベント案内`（新しいものが上）。
@@ -290,6 +297,29 @@ TOPPERS のウェブ管理担当へ連絡する場合の文面案を作る。送
 - 添付ファイルの説明: `releases.csv`（リポジトリ名／バージョン／リリース日時／URL／リリースノート）
 - リリース本文が空だった項目があれば、その旨と追記の要否確認
 - 依頼事項（マージ依頼 か 報告のみ か。運用によって変わるのでユーザに確認する）
+
+## Step 7: 後片付け（マージ後）
+
+`toppers/hakoniwa` はマージ時にリモートの作業ブランチが削除される設定になっている。
+ローカルにはブランチが残り、`web` も遅れたままになるので、マージを確認したら戻しておく。
+
+```bash
+cd /Users/mtakada/Workspace/hakoniwa/hakoniwa
+git checkout web && git pull --ff-only && git fetch --prune origin
+git branch -vv                 # [origin/xxx: gone] が消し忘れ
+git branch -d <作業ブランチ>    # マージ済みなら -d で消せる
+```
+
+`-d` が「マージされていない」と拒否する場合は、本当にマージ済みか確認する
+（squash merge だと `-d` では判定できないことがある）。判断が付かないまま `-D` で
+強制削除しない。ユーザに確認する。
+
+このリセットは Step 2 / Step 2E の冒頭でも同じことをやるので、後片付けを忘れていても
+次の作業開始時に回収できる。どちらかのタイミングで必ず通ること。
+
+マージ時に自分が作っていないコミットが `web` に増えていることがある
+（レビュー側で修正が入るなど）。`git log --oneline -5` で確認し、告知文やメール文面を
+作る前に、実際にサイトへ反映された内容を見るようにする。
 
 ## 全体を通しての注意
 
