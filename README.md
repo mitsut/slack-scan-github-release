@@ -53,6 +53,9 @@ uv sync
 
    注: `notification-development` がプライベートチャンネルの場合は `groups:*` の権限が必要です
 
+   注: 本スクリプトは読み取りのみを行います。Slack への投稿やファイルアップロードは
+   行わないため、`chat:write` や `files:write` は付与しないでください（最小権限）。
+
 6. ページ上部の "Install to Workspace" ボタンをクリック
 7. 権限の確認画面で "許可する" をクリック
 8. "Bot User OAuth Token" (`xoxb-`で始まるトークン) が表示されるのでコピー
