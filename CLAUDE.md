@@ -25,8 +25,9 @@ uv run python slack_github_releases.py
 ```
 
 オプションはすべて環境変数で指定します。出力先は `OUTPUT_MD` / `OUTPUT_CSV` /
-`OUTPUT_HTML`（箱庭WG向け）で、指定しなければ標準出力のみです。一覧と例は README.md を
-参照してください。次の 2 つは付け忘れると出力が痩せるので、意識して指定します。
+`OUTPUT_HTML`（TOPPERS TOPIC 掲載用。ファイル名は `topic.html` に統一）で、指定しなければ
+標準出力のみです。一覧と例は README.md を参照してください。次の 2 つは付け忘れると出力が
+痩せるので、意識して指定します。
 
 - `FETCH_NOTES=true` — リリースノートを取得。Markdown/HTML 出力ではほぼ必須
 - `SCAN_DAYS=14` — スキャン期間（デフォルト 7 日）。前回掲載日からの日数を指定する

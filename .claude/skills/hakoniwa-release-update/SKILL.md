@@ -28,7 +28,7 @@ connpass 等のイベント → サイトの「トピックス・イベント案
 | categoryId（Announcements） | `DIC_kwDODtOtmM4B-Q6T` |
 | Slack レビュー先 | 自分への DM（`channel_id` に自分の user_id `UH6GLJG5S` を指定） |
 | 承認の合図 | その Slack メッセージへの 👍 リアクション |
-| TOPPERS TOPIC | https://www.toppers.jp/ の管理者宛にメール（HTML 添付、宛先は下書き時に手入力） |
+| TOPPERS TOPIC | https://www.toppers.jp/ へ掲載依頼のメール下書き（To: `web-mgmt@toppers.jp` / Cc: `hakoniwa.toppers@gmail.com`、HTML 添付、送信はユーザ） |
 | 状態ファイル | このリポジトリの `state/last_report.json` |
 
 TOPPERS 全体向けの話題（WG 横断の案内など）は `toppers/users-forum` の Announcements
@@ -45,15 +45,41 @@ TOPPERS 全体向けの話題（WG 横断の案内など）は `toppers/users-fo
   "last_scan_date": "2026-07-28",
   "pending": null,
   "posted_urls": ["https://github.com/.../releases/tag/v4.0.0"],
+  "ignored_urls": ["https://github.com/toppers/arduino_esp32/releases/tag/v0.6.2"],
   "history": [{"posted_at": "...", "period": "...", "count": 5, "discussion_url": "..."}]
 }
 ```
 
 - `last_scan_date` — 前回スキャンの基準日。次回はここから今日までを見る
-- `pending` — レビュー投稿済みで承認待ちの下書き。`{"slack_ts": "...", "channel_id": "...",
-  "posted_at": "...", "title": "...", "body_file": "...", "html_file": "...", "urls": [...]}`
 - `posted_urls` — 告知済みリリースの URL。重複投稿の判定に使う
+- `ignored_urls` — 対象外（箱庭以外）として一度レビューに出した URL。翌週の「対象外」一覧から
+  除いて、同じものを毎回見せないためのもの
 - `history` — 投稿履歴（追記のみ）
+- `pending` — レビュー投稿済みで承認待ちの下書き。**次の項目を省略せずに記録する**
+
+```json
+{
+  "slack_ts": "1790146939.140459",
+  "channel_id": "DH7KS8M3R",
+  "posted_at": "2026-09-23",
+  "scan_until": "2026-09-23",
+  "title": "箱庭WG リリース情報のお知らせ（2026年9月）",
+  "period": "2026-07-28..2026-09-23",
+  "body_file": "state/pending_body.md",
+  "html_file": "state/pending_topic.html",
+  "body_sha256": "…",
+  "urls": ["https://github.com/.../releases/tag/v4.1.1"],
+  "excluded_urls": ["https://github.com/toppers/arduino_esp32/releases/tag/v0.6.2"],
+  "discussion_url": null
+}
+```
+
+`scan_until` は**そのスキャンが対象にした最終日**。承認が翌日以降になっても、`last_scan_date` は
+「承認した日」ではなく `scan_until` に進める。今日に進めてしまうと、スキャン後・承認前に流れた
+リリースを一度も見ないまま飛ばすことになる。
+
+`discussion_url` は投稿に成功した**直後**に書き込む（後述）。`body_sha256` は承認された本文の
+同一性確認用。
 
 ---
 
@@ -69,11 +95,16 @@ cat state/last_report.json
 ```
 
 `pending` があれば 👍 が付いたか確認する（Slack コネクタの `slack_get_reactions` に
-`channel_id` と `message_ts` を渡す）。
+`channel_id` と `message_ts` を渡す）。**リアクションしたユーザが本人（`UH6GLJG5S`）か**も見る。
+他の誰か・アプリが付けた 👍 を承認と見なさない。
 
-- 👍 あり → **Step R4（承認後の処理）へ進む**
-- 👍 なし、スレッドに修正指示あり → 指示を反映して下書きを更新し、再度レビュー依頼
-- 👍 なし、反応なし → 今回は何もしない。「先週分が未承認です」とだけ伝えて終了
+- 👍 あり（本人） → **Step R4（承認後の処理）へ進む**。R4 を終えたらそのまま Step R2 の
+  スキャンに進む（週次実行の場合。承認だけを見る監視タスクなら R4 で終了）
+- 👍 なし、スレッドに修正指示あり → 指示を反映して本文を作り直し、**スレッドに新しい
+  メッセージとして投げ直す**。`pending.slack_ts` をその新しいメッセージの ts に差し替え、
+  `body_sha256` も取り直す。古いメッセージの 👍 を新しい本文への承認と取り違えないため
+- 👍 なし、反応なし → 今回は何もしない。「先週分が未承認です」とだけ伝えて終了。
+  スキャンもしない（承認待ちが 2 件並ぶと、どちらを投稿すべきか分からなくなる）
 
 ## Step R2: Slack をスキャンする
 
@@ -113,30 +144,58 @@ SCAN_DAYS=<日数> FETCH_NOTES=true \
 対象外のものは**捨てずに、Slack のレビュー依頼に「対象外（箱庭以外）」として列挙する**。
 判断を誤っていればユーザがスレッドで指示できる。「これも入れて」と言われた場合だけ含める。
 
-**2. `posted_urls` に含まれる URL を除外する**
+**2. `posted_urls`（告知済み）と `ignored_urls`（対象外として既出）を除外する**
 
-重なり日に既報が混ざるため。
+重なり日に既報が混ざるため。`TARGET` の判定は 1 か所にまとめ、対象・対象外を同じ式で分ける。
 
 ```bash
 python3 - <<'EOF'
 import csv, json, re
-posted = set(json.load(open('state/last_report.json'))['posted_urls'])
+st = json.load(open('state/last_report.json'))
+posted, ignored = set(st['posted_urls']), set(st.get('ignored_urls', []))
+TARGET = re.compile(r'^(toppers/hakoniwa|hakoniwalab/)')
 rows = [r for r in csv.DictReader(open('releases.csv')) if r['url'] not in posted]
-target = [r for r in rows if re.match(r'^(toppers/hakoniwa|hakoniwalab/)', r['repository'])]
-other  = [r for r in rows if r not in target]
-print('告知対象', len(target), '/ 対象外', len(other))
-for r in target: print('  [対象]', r['repository'], r['version'], r['release_date'][:10])
-for r in other: print('  [対象外]', r['repository'], r['version'], r['release_date'][:10])
+target = [r for r in rows if TARGET.match(r['repository'])]
+other  = [r for r in rows if not TARGET.match(r['repository']) and r['url'] not in ignored]
+print('告知対象', len(target), '/ 対象外(新規)', len(other))
+for r in target: print('  [対象]', r['repository'], r['version'], r['release_date'][:10], r['url'])
+for r in other: print('  [対象外]', r['repository'], r['version'], r['release_date'][:10], r['url'])
 EOF
 ```
 
-告知対象が 0 件なら、Slack DM に一行（「今週は箱庭の新規リリースなし（対象外 N 件）」）だけ
-投げて終了し、`pending` は作らずに `last_scan_date` を今日に更新する。
-`last_scan_date` が進むので、対象外のリリースが翌週また出てくることはない。
+**`topic.html` は必ず告知対象だけに絞ってから使う。** 対象外の項目も「【一般向け】箱庭WGで
+以下のリポジトリのリリースを行いました」という文言で生成されるため、絞らずに送ると誤った案内に
+なる。日付ブロック単位で抜き出し、`state/pending_topic.html` に保存する。
 
-`topic.html` はスキャンした全件を含むので、**告知対象だけに絞ってから添付する**。
-対象外の項目も「【一般向け】箱庭WGで以下のリポジトリのリリースを行いました」という文言で
-生成されるため、絞らずに送ると誤った案内になる。
+```bash
+python3 - <<'EOF'
+import re
+blocks = re.findall(r'    <dt>.*?</dd>\n', open('topic.html').read(), re.S)
+TARGET = re.compile(r'github\.com/(toppers/hakoniwa|hakoniwalab/)')
+keep   = [b for b in blocks if TARGET.search(b)]
+mixed  = [b for b in keep if re.search(r'github\.com/(?!toppers/hakoniwa|hakoniwalab/)[\w.-]+/[\w.-]+/releases', b)]
+open('state/pending_topic.html','w').write(''.join(keep))
+print('採用ブロック', len(keep), '/ 全', len(blocks))
+if mixed:
+    print('⚠ 同じ日に対象外が混ざったブロックがあります。手で該当 li を削ってください:', len(mixed))
+EOF
+```
+
+同じ日付に対象と対象外が混在した場合は自動では落とせないので、警告が出たら手で削る。
+添付する前に、生成された HTML を一度開いて**タグが壊れていないか・リリースノート由来の
+意図しないタグやリンクが混ざっていないか**を確認する。リリースノートは HTML エスケープされずに
+埋め込まれるため、外部リポジトリの本文がそのまま TOPPERS のページに載る形になる。
+
+告知対象が 0 件なら、Slack DM に一行（「今週は箱庭の新規リリースなし（対象外 N 件）」）だけ
+投げて終了する。`pending` は作らず、`last_scan_date` を**そのスキャンの対象最終日**に更新し、
+今回出した対象外の URL を `ignored_urls` に追記してコミットする。
+
+**検出 0 件が何週も続く場合は購読と判定文言を疑う。** スクリプトは attachment の fallback に
+`New release` を含む通知だけを拾うので、GitHub の Slack アプリが表示形式を変えると静かに
+取りこぼす。`/github subscribe list` で購読を確認し、チャンネルを直接見て通知の有無を確かめる。
+
+なお `release_date` は**Slack に通知が流れた日時**であって GitHub 上のリリース日時ではない。
+通知が遅れた場合はずれるので、日付が不自然なときは GitHub のリリースページで確かめる。
 
 ### 取得したリリースノートの扱い
 
@@ -151,9 +210,11 @@ EOF
 
 ## Step R3: Slack DM にレビュー依頼を出す
 
-Discussions にそのまま載る本文を作り、Slack コネクタで自分の DM に投げる
-（`slack_send_message` の `channel_id` に `UH6GLJG5S`）。本文は下書きファイルにも保存しておく
-（スクラッチパッドで可。パスを `pending.body_file` に記録する）。
+Discussions にそのまま載る本文を作り、**`state/pending_body.md` に保存してから**
+Slack コネクタで自分の DM に投げる（`slack_send_message` の `channel_id` に `UH6GLJG5S`）。
+
+本文とHTMLは `state/` に置く。スクラッチパッドはセッションをまたぐと消えることがあり、
+承認が翌日になる運用では投稿時にファイルが無くなる（`.gitignore` 済みなのでコミットはされない）。
 
 Discussions 本文の構成:
 
@@ -178,13 +239,35 @@ Slack に投げるメッセージには次を含める。レビューする側�
 - 投稿予定先（`toppers/hakoniwa` の Announcements）
 - Discussions 本文の全文
 - TOPIC 用 HTML に入る日付・リポジトリの一覧（HTML そのものは長いので要約でよい）
+- 対象外にしたリリースの一覧（箱庭以外。判断が違えばスレッドで指摘してもらう）
 
-投げたら `state/last_report.json` の `pending` に `slack_ts` / `channel_id` / 本文ファイルのパス /
-対象 URL を記録する。ここで記録し忘れると次回の実行が承認を拾えない。
+投げたら `state/last_report.json` の `pending` を**全項目そろえて**記録し、コミットする。
+`slack_ts` / `channel_id` / `title` / `period` / `scan_until` / `body_file` / `html_file` /
+`body_sha256` / `urls` / `excluded_urls` / `discussion_url: null`。
+どれか欠けると、承認を拾う側が投稿先・件名・添付・重複判定のいずれかを復元できない。
+
+```bash
+shasum -a 256 state/pending_body.md   # body_sha256 に入れる
+git add state/last_report.json && git commit -m "chore: record pending release announcement"
+```
+
+コミットまでが Step R3。状態がローカルにしか無いと、別のマシンや巻き戻しのときに
+二重投稿の原因になる。
 
 ## Step R4: 承認後の処理
 
-👍 が付いていたら、次の 3 つを順に行う。
+👍 が付いていたら、次の 3 つを順に行う。**始める前に 2 つ確認する。**
+
+```bash
+python3 -c "import json;p=json.load(open('state/last_report.json'))['pending'];print('discussion_url:',p.get('discussion_url'))"
+shasum -a 256 state/pending_body.md   # pending.body_sha256 と一致するか
+```
+
+- `discussion_url` が既に入っていれば**投稿は済んでいる**。R4-1 を飛ばして、メール下書きと
+  状態更新だけを行う。途中で失敗したまま再実行すると、ここを見ないと同じ Discussion を
+  二重に立ててしまう（監視タスクが重なって走った場合も同じ）
+- `body_sha256` が一致しなければ、承認された本文と中身が変わっている。**投稿せず**、
+  差分をユーザに見せて承認を取り直す
 
 **1. Discussions に投稿**
 
@@ -195,8 +278,12 @@ gh api graphql -f query='mutation($repo:ID!,$cat:ID!,$title:String!,$body:String
   --jq '.data.createDiscussion.discussion | "#\(.number) \(.url)"'
 ```
 
-本文ファイルが消えていると空文字が渡り `Body can't be blank` で失敗する。失敗時に投稿は
-作られないので、本文を復元して再実行すればよい（重複の心配はない）。実行前にファイルの存在を確認する。
+本文ファイルが消えていると空文字が渡り `Body can't be blank` で失敗する。この失敗では投稿は
+作られないので、本文を復元して再実行してよい。実行前にファイルの存在を確認する。
+
+**投稿に成功したら、その場で `pending.discussion_url` に URL を書いてコミットする。**
+メール作成や状態更新で失敗しても、次の実行が「投稿済み」と分かるようにするため。ここを
+後回しにすると二重投稿になる。
 
 **2. TOPPERS TOPIC 用メールの下書きを作る**
 
@@ -241,10 +328,13 @@ Gmail コネクタの `create_draft` を使う。宛先は固定で、**送信�
 
 **3. 状態を更新して報告**
 
-- `posted_urls` に今回の URL を追記
+- `posted_urls` に `pending.urls` を追記
+- `ignored_urls` に `pending.excluded_urls` を追記
 - `history` に `{posted_at, period, count, discussion_url}` を追記
+- `last_scan_date` を **`pending.scan_until`** に更新（今日ではない。承認待ちの間に流れた
+  リリースを飛ばさないため）
 - `pending` を `null` に戻す
-- `last_scan_date` を今日に更新
+- ここまでを 1 コミットにまとめる
 - Slack の元メッセージのスレッドに「投稿しました: <Discussion URL> / メール下書き作成済み」と返信
   （`slack_send_message` の `thread_ts` に `pending.slack_ts`）
 
@@ -279,9 +369,12 @@ git -C "$HAKONIWA" remote -v   # toppers/hakoniwa を指しているか確認
 ```bash
 cd "$HAKONIWA"
 git checkout web && git pull --ff-only && git fetch --prune origin
-git branch -vv   # [origin/xxx: gone] が残っていれば git branch -d で消す
+git branch -a --list '*topics-*'   # 同名ブランチが無いか確認
 git checkout -b topics-YYYYMM origin/web
 ```
+
+ブランチ名は `topics-<年月>`。同じ月に 2 件目を扱う場合や、前の PR が未マージで残っている場合は
+`topics-YYYYMM-2` のように連番を足す（既存ブランチに追記すると別件が混ざる）。
 
 編集対象は `content/_index.md` の `### トピックス・イベント案内`（新しいものが上）。
 `[もっと見る](topics)` の先にある `content/topics.md` が過去ログで、終わったイベントはそちらへ移す。
@@ -381,8 +474,11 @@ git branch -vv   # [origin/xxx: gone] を git branch -d で削除
 - `.secret` の中身は表示しない・echo しない・`env | grep` もしない。
 - スキャン用 Slack ボットは**読み取り専用**（`chat:write` なし）。Slack への投稿は Claude の
   Slack コネクタで行う。ボットにスコープを足さない。
-- 生成物（`releases.csv` / `releases.md` / `topic.html` / `hakoniwa.html`）はコミットしない
-  （`.gitignore` 済み）。`state/last_report.json` は**コミットする**（運用の記憶なので残す）。
+- 生成物（`releases.csv` / `releases.md` / `topic.html`）と、承認待ちの一時ファイル
+  （`state/pending_body.md` / `state/pending_topic.html`）はコミットしない（`.gitignore` 済み）。
+  `state/last_report.json` は**コミットする**（運用の記憶なので残す）。
+- 出力ファイル名は `topic.html` に統一する（以前は `hakoniwa.html` を使っていた）。承認待ちから
+  再開するときにどちらを添付するか迷わないため。
 - Discussions 投稿・PR 作成・push は取り消しにくい公開操作。週次フローでは 👍 が承認の代わりに
   なるが、それ以外の場面では実行前に内容を見せて承諾を得る。
 - メールは下書きまで。送信はユーザが行う。
