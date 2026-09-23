@@ -3,6 +3,7 @@
 Slackチャンネルから1週間分のGitHubリリース通知を抽出するスクリプト
 """
 
+import html
 import os
 import re
 import requests
@@ -331,6 +332,20 @@ def _merge_label_url_pairs(note_lines: List[str]) -> List[str]:
     return result
 
 
+def _safe_href(url: Optional[str]) -> Optional[str]:
+    """href 属性に埋め込める形に整える
+
+    リリースノート由来の URL をそのまま出すと、javascript: などのスキームや
+    引用符の混入でリンク先を差し替えられる。http/https だけを通し、
+    属性値としてエスケープする。通せない場合は None を返す（リンクにしない）。
+    """
+    if not url:
+        return None
+    if not re.match(r'^https?://', url.strip(), re.IGNORECASE):
+        return None
+    return html.escape(url.strip(), quote=True)
+
+
 def export_to_markdown(releases: List[Dict], output_file: str):
     """
     リリース情報をMarkdown形式で出力
@@ -395,6 +410,9 @@ def export_to_html(releases: List[Dict], output_file: str):
     """
     リリース情報をHTML形式で出力（箱庭WG向けフォーマット）
 
+    リポジトリ名・バージョン・リリースノートは外部リポジトリ由来の文字列なので、
+    出力先（TOPPERSサイトのTOPIC）でタグとして解釈されないようエスケープする。
+
     Args:
         releases: リリース情報のリスト
         output_file: 出力ファイルパス
@@ -420,9 +438,10 @@ def export_to_html(releases: List[Dict], output_file: str):
         lines.append('        <ul>')
 
         for release in releases_by_date[date_str]:
-            repo = release['repository']
-            version = release['version']
-            url = release['url']
+            # リリースノートは外部リポジトリ由来のため、HTMLとして解釈されないようエスケープする
+            repo = html.escape(release['repository'])
+            version = html.escape(release['version'])
+            url = _safe_href(release['url'])
             release_date = release['release_date'].strftime('%Y.%-m.%-d')
 
             # リリースタイトル行
@@ -445,11 +464,12 @@ def export_to_html(releases: List[Dict], output_file: str):
                         if note_line.startswith('-') or note_line.startswith('*'):
                             note_line = note_line.lstrip('-*').strip()
                         md_match = md_link_re.match(note_line)
-                        if md_match:
-                            text, href = md_match.groups()
-                            lines.append(f'                <li><a href="{href}">{text}</a></li>')
+                        safe_href = _safe_href(md_match.group(2)) if md_match else None
+                        if safe_href:
+                            text = html.escape(md_match.group(1))
+                            lines.append(f'                <li><a href="{safe_href}">{text}</a></li>')
                         else:
-                            lines.append(f'                <li>{note_line}</li>')
+                            lines.append(f'                <li>{html.escape(note_line)}</li>')
                     lines.append('            </ul>')
 
         lines.append('        </ul>')
