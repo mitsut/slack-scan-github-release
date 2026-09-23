@@ -184,9 +184,10 @@ Gmail コネクタの `create_draft` を使う。`attachments` に `topic.html` 
 
 ## Step R5: 週次自動実行
 
-毎週金曜にスケジュールタスクが走る（`hakoniwa-weekly-release-check`）。承認待ちの拾い上げは
-別タスク（`hakoniwa-approval-watch`）が金・土の数時間おきに見る。どちらもこのスキルの
-Step R1〜R4 をそのまま実行する。タスクは Claude アプリが起動しているときだけ動く。
+毎週金曜 17:00 にスケジュールタスクが走る（`hakoniwa-weekly-release-check`、Step R1〜R3）。
+承認待ちの拾い上げは別タスク（`hakoniwa-approval-watch`）が金・土の 13:00 / 16:00 / 19:00 に
+見る（Step R1 と R4）。金曜はスキャンが 17:00 なので、当日拾えるのは 19:00 の回だけで、
+それ以降は土曜の各回が拾う。どちらのタスクも Claude アプリが起動しているときだけ動く。
 
 手で回したいときは「週次のリリースチェックを回して」と言われた場合と同じで、Step R1 から順に行う。
 
