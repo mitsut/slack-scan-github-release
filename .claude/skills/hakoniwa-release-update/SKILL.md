@@ -200,7 +200,15 @@ gh api graphql -f query='mutation($repo:ID!,$cat:ID!,$title:String!,$body:String
 
 **2. TOPPERS TOPIC 用メールの下書きを作る**
 
-Gmail コネクタの `create_draft` を使う。**宛先は空のままにする**（送信はユーザが宛先を入れて行う）。
+Gmail コネクタの `create_draft` を使う。宛先は固定で、**送信はしない**（ユーザが内容を確認して送る）。
+
+| | アドレス |
+|---|---|
+| To | `web-mgmt@toppers.jp` |
+| Cc | `hakoniwa.toppers@gmail.com` |
+
+`update_draft` で下書きを直す場合、**添付はマージされない**。宛先や本文だけ直すつもりでも
+`attachments` を渡し直さないと添付が消える。
 
 ### 添付の MIME タイプ（重要）
 
