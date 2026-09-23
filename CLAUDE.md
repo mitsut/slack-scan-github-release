@@ -33,13 +33,21 @@ uv run python slack_github_releases.py
 
 ## 運用方針
 
-- 主要用途は箱庭WG向けのリリース情報レポート生成です。スキャンからサイト更新・
-  告知までの一連の手順は `.claude/skills/hakoniwa-release-update/SKILL.md` に
-  まとめてあります。関連する依頼はそちらの手順に従ってください。
-- Slack へは読み取りのみ。投稿やファイルアップロードは行いません
-  （Bot に `chat:write` / `files:write` を付与しない方針です）。
-- 実行は現状すべて手動です。週次の定期実行を GitHub Actions（schedule + secrets）へ
-  移す案がありますが、まだ判断していません。移行を検討する場合はユーザに確認してください。
+- 主要用途は箱庭WG向けのリリース情報レポート生成です。スキャンから告知までの一連の
+  手順は `.claude/skills/hakoniwa-release-update/SKILL.md` にまとめてあります。
+  関連する依頼はそちらの手順に従ってください。
+- リリース情報の出力先は 2 つです（2026-09 の運用変更）。箱庭WGサイトの「更新情報」には
+  **載せません**（過去分は残し、今後追記しない）。
+  - `toppers/hakoniwa` の Discussions / Announcements に投稿
+  - TOPPERS TOPIC（https://www.toppers.jp/ ）の管理者宛に、差分 HTML を添付した
+    メールの下書きを作成（送信はユーザが行う）
+- 週次で自動実行します（毎週金曜のスケジュールタスク `hakoniwa-weekly-release-check`、
+  承認待ちの拾い上げは `hakoniwa-approval-watch`）。スキャン結果は Slack DM に投げて
+  レビューし、👍 リアクションが付いたら投稿します。
+- Slack ボットは読み取り専用のままです（`chat:write` / `files:write` を付与しない方針）。
+  Slack への投稿が必要な場合は Claude の Slack コネクタを使ってください。
+- `state/last_report.json` が週次運用の状態（前回スキャン日・承認待ち・告知済み URL）です。
+  生成物と違いコミット対象なので、更新したらコミットしてください。
 
 ## 注意
 

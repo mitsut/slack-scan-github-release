@@ -1,0 +1,21 @@
+{
+  "_comment": "週次リリースレポートの状態。scripts ではなくスキル(.claude/skills/hakoniwa-release-update)が読み書きする。",
+  "last_scan_date": "2026-07-28",
+  "pending": null,
+  "posted_urls": [
+    "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.0.0",
+    "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v3.8.1",
+    "https://github.com/hakoniwalab/hakoniwa-core-pro/releases/tag/v1.3.0",
+    "https://github.com/hakoniwalab/hakoniwa-mujoco-robots/releases/tag/v1.3.0",
+    "https://github.com/hakoniwalab/hakoniwa-core-pro/releases/tag/v1.2.1"
+  ],
+  "history": [
+    {
+      "posted_at": "2026-08-02",
+      "period": "2026-05-30..2026-06-18",
+      "count": 5,
+      "discussion_url": "https://github.com/orgs/toppers/discussions/172",
+      "note": "旧運用（users-forum へ投稿、サイトの更新情報にも掲載）"
+    }
+  ]
+}
