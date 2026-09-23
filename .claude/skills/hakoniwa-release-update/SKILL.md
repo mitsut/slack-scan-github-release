@@ -96,9 +96,47 @@ SCAN_DAYS=<日数> FETCH_NOTES=true \
 - スキャン対象は Slack チャンネルの GitHub 購読で決まる。増やすなら
   `/github subscribe owner/repo releases`、一覧は `/github subscribe list`
 
-**`posted_urls` に含まれる URL は除外する。** 重なり日に既報が混ざるので、
-除外したうえで件数を数える。新規が 0 件なら Slack DM に一行（「今週は新規リリースなし」）だけ
-投げて終了し、`last_scan_date` を今日に更新する。
+### 検出したリリースの絞り込み
+
+スキャン元の `#notification-development` には TOPPERS 全体の通知が流れるため、箱庭WGとは
+関係ないリポジトリのリリース（例: `toppers/arduino_esp32`）も拾われる。これを「箱庭WGの
+リリース情報」として告知すると誤報になるので、2 段で絞る。
+
+**1. 告知対象のリポジトリだけを残す**
+
+| 判定 | パターン |
+|---|---|
+| 告知対象 | `toppers/hakoniwa*`（`hakoniwa-drone-core`, `hakoniwa-ros2pdu`, `hakoniwa-ecu-multiplay` など） |
+| 告知対象 | `hakoniwalab/*`（`hakoniwa-core-pro`, `hakoniwa-mujoco-robots` など） |
+| 対象外 | 上記以外すべて |
+
+対象外のものは**捨てずに、Slack のレビュー依頼に「対象外（箱庭以外）」として列挙する**。
+判断を誤っていればユーザがスレッドで指示できる。「これも入れて」と言われた場合だけ含める。
+
+**2. `posted_urls` に含まれる URL を除外する**
+
+重なり日に既報が混ざるため。
+
+```bash
+python3 - <<'EOF'
+import csv, json, re
+posted = set(json.load(open('state/last_report.json'))['posted_urls'])
+rows = [r for r in csv.DictReader(open('releases.csv')) if r['url'] not in posted]
+target = [r for r in rows if re.match(r'^(toppers/hakoniwa|hakoniwalab/)', r['repository'])]
+other  = [r for r in rows if r not in target]
+print('告知対象', len(target), '/ 対象外', len(other))
+for r in target: print('  [対象]', r['repository'], r['version'], r['release_date'][:10])
+for r in other: print('  [対象外]', r['repository'], r['version'], r['release_date'][:10])
+EOF
+```
+
+告知対象が 0 件なら、Slack DM に一行（「今週は箱庭の新規リリースなし（対象外 N 件）」）だけ
+投げて終了し、`pending` は作らずに `last_scan_date` を今日に更新する。
+`last_scan_date` が進むので、対象外のリリースが翌週また出てくることはない。
+
+`topic.html` はスキャンした全件を含むので、**告知対象だけに絞ってから添付する**。
+対象外の項目も「【一般向け】箱庭WGで以下のリポジトリのリリースを行いました」という文言で
+生成されるため、絞らずに送ると誤った案内になる。
 
 ### 取得したリリースノートの扱い
 
