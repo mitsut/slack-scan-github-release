@@ -164,24 +164,25 @@ gh api graphql -f query='mutation($repo:ID!,$cat:ID!,$title:String!,$body:String
 
 Gmail コネクタの `create_draft` を使う。**宛先は空のままにする**（送信はユーザが宛先を入れて行う）。
 
-### 添付の文字化け対策（重要）
+### 添付の MIME タイプ（重要）
 
-Gmail コネクタは添付のバイト列を変換してしまい、UTF-8 の日本語がそのままでは文字化けする
-（正しい UTF-8 を base64 で渡しても、受け取った側のファイルが壊れる）。しかも作成した下書きは
-`get_message` で読み返せない（権限エラー）ので、こちらでは検証できない。そのため:
+**`mimeType` には `application/octet-stream` を指定する。** `text/html` を指定すると Gmail
+コネクタが添付をテキストとして扱い、**日本語が 1 文字ずつ `?` に置換されて中身が失われる**
+（文字化けではなく情報の欠落なので、受け取った側では復元できない）。正しい UTF-8 を base64 で
+渡しても起きるため、渡し方では防げない。検証済み:
 
-- 添付する HTML は**非 ASCII 文字を数値文字参照に変換**してから base64 にする。ASCII だけなら
-  どんな変換が入っても壊れない。ブラウザや掲載ページでは通常の日本語として表示される
+| mimeType | 結果 |
+|---|---|
+| `text/html` / `text/html; charset=utf-8` | ✗ 日本語がすべて `?` になる |
+| `application/octet-stream`（`.html` のまま） | ✓ UTF-8 のまま届く。**これを使う** |
+| `application/zip`（HTML を ZIP 圧縮） | ✓ 届くが、開く手間が増えるので次善 |
 
-  ```python
-  ascii_doc = ''.join(c if ord(c) < 128 else f'&#x{ord(c):04X};' for c in doc)
-  ```
+作成した下書きは `get_message` で読み返せない（権限エラー）ため、こちらでは検証できない。
+念のためユーザに「添付を開いて日本語が読めるか確認してください」と伝える。
 
-- `<meta charset="utf-8">` を持つ最小の HTML 文書で `<dl>` ごと包む（掲載する `dt`/`dd` は
-  そのまま使える）。`mimeType` は `"text/html; charset=utf-8"` を指定する
-- 読みやすい素の HTML は**メール本文にも貼っておく**。数値文字参照だと編集しづらいので、
-  受け取った側がどちらでも選べるようにする
-- 作成後はユーザに「添付を開いて文字化けしていないか確認してください」と伝える
+添付ファイルは `<meta charset="utf-8">` を持つ最小の HTML 文書で `<dl>` ごと包む（掲載する
+`dt`/`dd` はそのまま使える）。同じ内容をメール本文にもテキストで貼っておくと、受け取った側が
+添付を開かずにコピーできる。
 
 `filename` は `hakoniwa-topic-YYYYMMDD.html`。件名と本文の要素:
 
