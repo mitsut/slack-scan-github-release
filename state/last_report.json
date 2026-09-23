@@ -1,7 +1,29 @@
 {
   "_comment": "週次リリースレポートの状態。scripts ではなくスキル(.claude/skills/hakoniwa-release-update)が読み書きする。",
   "last_scan_date": "2026-07-28",
-  "pending": null,
+  "pending": {
+    "slack_ts": "1790146939.140459",
+    "channel_id": "DH7KS8M3R",
+    "message_link": "https://hakoniwa-sdk.slack.com/archives/DH7KS8M3R/p1790146939140459",
+    "posted_at": "2026-09-23",
+    "title": "箱庭WG リリース情報のお知らせ（2026年9月）",
+    "body_file": "state/pending_body.md",
+    "html_file": "state/pending_topic.html",
+    "period": "2026-07-28..2026-09-23",
+    "urls": [
+      "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.1.1"
+    ],
+    "excluded_non_hakoniwa": [
+      "https://github.com/toppers/arduino_esp32/releases/tag/v0.6.2",
+      "https://github.com/toppers/arduino_esp32/releases/tag/v0.6.1",
+      "https://github.com/toppers/arduino_esp32/releases/tag/v0.6.0",
+      "https://github.com/toppers/arduino_esp32/releases/tag/v0.5.0",
+      "https://github.com/toppers/arduino_esp32/releases/tag/v0.4.2",
+      "https://github.com/toppers/arduino_esp32/releases/tag/v0.4.1",
+      "https://github.com/toppers/arduino_esp32/releases/tag/v0.4.0"
+    ],
+    "note": "TOPIC 用 HTML は全8件を含む。承認時に箱庭分のみへ絞る（arduino_esp32 を含めるかはスレッドの指示に従う）"
+  },
   "posted_urls": [
     "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.0.0",
     "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v3.8.1",
