@@ -162,9 +162,28 @@ gh api graphql -f query='mutation($repo:ID!,$cat:ID!,$title:String!,$body:String
 
 **2. TOPPERS TOPIC 用メールの下書きを作る**
 
-Gmail コネクタの `create_draft` を使う。`attachments` に `topic.html` を base64 で載せる
-（`mimeType: "text/html"`, `filename: "hakoniwa-topic-YYYYMMDD.html"`）。**宛先は空のままにする**
-（送信はユーザが宛先を入れて行う）。件名と本文の要素:
+Gmail コネクタの `create_draft` を使う。**宛先は空のままにする**（送信はユーザが宛先を入れて行う）。
+
+### 添付の文字化け対策（重要）
+
+Gmail コネクタは添付のバイト列を変換してしまい、UTF-8 の日本語がそのままでは文字化けする
+（正しい UTF-8 を base64 で渡しても、受け取った側のファイルが壊れる）。しかも作成した下書きは
+`get_message` で読み返せない（権限エラー）ので、こちらでは検証できない。そのため:
+
+- 添付する HTML は**非 ASCII 文字を数値文字参照に変換**してから base64 にする。ASCII だけなら
+  どんな変換が入っても壊れない。ブラウザや掲載ページでは通常の日本語として表示される
+
+  ```python
+  ascii_doc = ''.join(c if ord(c) < 128 else f'&#x{ord(c):04X};' for c in doc)
+  ```
+
+- `<meta charset="utf-8">` を持つ最小の HTML 文書で `<dl>` ごと包む（掲載する `dt`/`dd` は
+  そのまま使える）。`mimeType` は `"text/html; charset=utf-8"` を指定する
+- 読みやすい素の HTML は**メール本文にも貼っておく**。数値文字参照だと編集しづらいので、
+  受け取った側がどちらでも選べるようにする
+- 作成後はユーザに「添付を開いて文字化けしていないか確認してください」と伝える
+
+`filename` は `hakoniwa-topic-YYYYMMDD.html`。件名と本文の要素:
 
 - 件名: `箱庭WG TOPIC 掲載依頼（<期間>リリース分）`
 - 本文: 掲載依頼である旨、対象期間、追加するリリースの一覧（日付・リポジトリ・バージョン）、
