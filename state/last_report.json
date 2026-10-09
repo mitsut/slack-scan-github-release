@@ -1,6 +1,6 @@
 {
   "_comment": "週次リリースレポートの状態。スキル(.claude/skills/hakoniwa-release-update)が読み書きする。posted_urls=告知済み / ignored_urls=対象外として既出 / pending=承認待ち",
-  "last_scan_date": "2026-09-25",
+  "last_scan_date": "2026-10-09",
   "pending": null,
   "posted_urls": [
     "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.0.0",
@@ -17,7 +17,8 @@
     "https://github.com/toppers/arduino_esp32/releases/tag/v0.5.0",
     "https://github.com/toppers/arduino_esp32/releases/tag/v0.4.2",
     "https://github.com/toppers/arduino_esp32/releases/tag/v0.4.1",
-    "https://github.com/toppers/arduino_esp32/releases/tag/v0.4.0"
+    "https://github.com/toppers/arduino_esp32/releases/tag/v0.4.0",
+    "https://github.com/toppers/arduino_esp32/releases/tag/v0.7.0"
   ],
   "history": [
     {
