@@ -1,7 +1,22 @@
 {
   "_comment": "週次リリースレポートの状態。スキル(.claude/skills/hakoniwa-release-update)が読み書きする。posted_urls=告知済み / ignored_urls=対象外として既出 / pending=承認待ち",
   "last_scan_date": "2026-10-09",
-  "pending": null,
+  "pending": {
+    "slack_ts": "1792415528.265799",
+    "channel_id": "DH7KS8M3R",
+    "posted_at": "2026-10-19",
+    "scan_until": "2026-10-19",
+    "title": "箱庭WG リリース情報のお知らせ（2026年10月）",
+    "period": "2026-10-09..2026-10-19",
+    "body_file": "state/pending_body.md",
+    "html_file": "state/pending_topic.html",
+    "body_sha256": "abdbd0454fe9dec178da40ea9137cad00d7e65a113e4504cd73dcda3a8fdf820",
+    "urls": [
+      "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.2.0"
+    ],
+    "excluded_urls": [],
+    "discussion_url": null
+  },
   "posted_urls": [
     "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.0.0",
     "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v3.8.1",
