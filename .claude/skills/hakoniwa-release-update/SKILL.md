@@ -268,6 +268,12 @@ shasum -a 256 state/pending_body.md   # pending.body_sha256 と一致するか
   二重に立ててしまう（監視タスクが重なって走った場合も同じ）
 - `body_sha256` が一致しなければ、承認された本文と中身が変わっている。**投稿せず**、
   差分をユーザに見せて承認を取り直す
+- メール側も同じく `html_sha256` を `state/pending_topic.html` と照合する。一致しなければ
+  添付を作らず、承認を取り直す（HTML だけ直して承認を取らずに送ることを防ぐ）
+
+```bash
+shasum -a 256 state/pending_topic.html   # pending.html_sha256 と一致するか
+```
 
 **1. Discussions に投稿**
 
