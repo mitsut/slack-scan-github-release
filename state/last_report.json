@@ -1,32 +1,15 @@
 {
   "_comment": "週次リリースレポートの状態。スキル(.claude/skills/hakoniwa-release-update)が読み書きする。posted_urls=告知済み / ignored_urls=対象外として既出 / pending=承認待ち",
-  "last_scan_date": "2026-10-09",
-  "pending": {
-    "slack_ts": "1793324880.742739",
-    "channel_id": "DH7KS8M3R",
-    "posted_at": "2026-10-30",
-    "scan_until": "2026-10-19",
-    "title": "箱庭WG リリース情報のお知らせ（2026年10月）",
-    "period": "2026-10-09..2026-10-19",
-    "body_file": "state/pending_body.md",
-    "html_file": "state/pending_topic.html",
-    "body_sha256": "abdbd0454fe9dec178da40ea9137cad00d7e65a113e4504cd73dcda3a8fdf820",
-    "urls": [
-      "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.2.0"
-    ],
-    "excluded_urls": [],
-    "discussion_url": "https://github.com/toppers/hakoniwa/discussions/228",
-    "html_sha256": "0d9e3d6ec211599ac8e69eea46804e7e2c0953b02dbb707c888cb386eb898597",
-    "revision": 2,
-    "revision_note": "TOPIC html を作り直し（記号の取れ残し除去）。旧版 1792415528.265799 は取り下げ"
-  },
+  "last_scan_date": "2026-10-19",
+  "pending": null,
   "posted_urls": [
     "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.0.0",
     "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v3.8.1",
     "https://github.com/hakoniwalab/hakoniwa-core-pro/releases/tag/v1.3.0",
     "https://github.com/hakoniwalab/hakoniwa-mujoco-robots/releases/tag/v1.3.0",
     "https://github.com/hakoniwalab/hakoniwa-core-pro/releases/tag/v1.2.1",
-    "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.1.1"
+    "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.1.1",
+    "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.2.0"
   ],
   "ignored_urls": [
     "https://github.com/toppers/arduino_esp32/releases/tag/v0.6.2",
@@ -52,6 +35,13 @@
       "count": 1,
       "discussion_url": "https://github.com/toppers/hakoniwa/discussions/227",
       "note": "TOPIC 用メール下書き作成済み（宛先空）。arduino_esp32 の 7 件は箱庭WG告知の対象外として除外"
+    },
+    {
+      "posted_at": "2026-10-30",
+      "period": "2026-10-09..2026-10-19",
+      "count": 1,
+      "discussion_url": "https://github.com/toppers/hakoniwa/discussions/228",
+      "note": "TOPIC 用メールは下書きを作らず、添付ファイルを本人に渡して手動送付"
     }
   ]
 }
