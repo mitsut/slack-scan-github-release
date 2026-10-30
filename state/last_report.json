@@ -15,7 +15,7 @@
       "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.2.0"
     ],
     "excluded_urls": [],
-    "discussion_url": null,
+    "discussion_url": "https://github.com/toppers/hakoniwa/discussions/228",
     "html_sha256": "0d9e3d6ec211599ac8e69eea46804e7e2c0953b02dbb707c888cb386eb898597",
     "revision": 2,
     "revision_note": "TOPIC html を作り直し（記号の取れ残し除去）。旧版 1792415528.265799 は取り下げ"
