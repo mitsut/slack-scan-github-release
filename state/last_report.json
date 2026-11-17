@@ -2,26 +2,35 @@
   "_comment": "週次リリースレポートの状態。スキル(.claude/skills/hakoniwa-release-update)が読み書きする。posted_urls=告知済み / ignored_urls=対象外として既出 / pending=承認待ち",
   "last_scan_date": "2026-10-30",
   "pending": {
-    "slack_ts": "1793953435.657159",
+    "slack_ts": "1794890519.513299",
     "channel_id": "DH7KS8M3R",
-    "posted_at": "2026-11-06",
-    "scan_until": "2026-11-06",
+    "posted_at": "2026-11-17",
+    "scan_until": "2026-11-17",
     "title": "箱庭WG リリース情報のお知らせ（2026年11月）",
-    "period": "2026-10-30..2026-11-06",
+    "period": "2026-10-30..2026-11-17",
     "body_file": "state/pending_body.md",
     "html_file": "state/pending_topic.html",
-    "body_sha256": "d333378fe94d82e2369f0ec820f0fb553f0ada7607684849bb7f9081d38e2f08",
+    "body_sha256": "ad28560cbe89a0a0cb3f406c42d04ddec19b186fc5e9ad1317b9556b9a068d13",
     "urls": [
-      "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v5.0.0"
-    ],
-    "excluded_urls": [
+      "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v5.0.0",
+      "https://github.com/toppers/athrill/releases/tag/v3.1.0",
+      "https://github.com/toppers/athrill-target-rh850f1x/releases/tag/v1.1.0",
       "https://github.com/toppers/athrill-target-rh850f1x/releases/tag/v1.0.0",
       "https://github.com/toppers/athrill-target-rh850f1x/releases/tag/RC2-v1.0.0",
       "https://github.com/toppers/athrill/releases/tag/v3.0.0",
-      "https://github.com/toppers/athrill/releases/tag/v1.2.0",
-      "https://github.com/toppers/tecscde-dt-el/releases/tag/v0.1.0"
+      "https://github.com/toppers/athrill/releases/tag/v1.2.0"
     ],
-    "discussion_url": null
+    "excluded_urls": [
+      "https://github.com/toppers/tecscde-dt-el/releases/tag/v0.1.0",
+      "https://github.com/toppers/tecscde-dt-el/releases/tag/v0.2.0",
+      "https://github.com/toppers/tecscde-dt-el/releases/tag/v0.2.2",
+      "https://github.com/toppers/tecscde-dt-el/releases/tag/v0.2.4",
+      "https://github.com/toppers/tecscde-dt-el/releases/tag/v0.2.5"
+    ],
+    "discussion_url": null,
+    "html_sha256": "fa44f76204b354f6ea00925d36f099bbab676e8beafb67ce8e9a0db846b68fa7",
+    "revision": 3,
+    "revision_note": "athrill 系を告知対象に追加。TOPIC html を作り直し（記号の取れ残し除去、日付ごとに分割）。前版 1793953435.657159 は取り下げ"
   },
   "posted_urls": [
     "https://github.com/toppers/hakoniwa-drone-core/releases/tag/v4.0.0",
